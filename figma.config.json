@@ -1,0 +1,30 @@
+{
+  "fileKey": "YOUR_FIGMA_FILE_KEY_HERE",
+
+  "tokens": {
+    "output": "static/css/tokens.css",
+    "prefix": "figma",
+    "styleTypeMapping": {
+      "FILL": "color",
+      "TEXT": "typography",
+      "EFFECT": "effect"
+    },
+    "extract": {
+      "colors": true,
+      "typography": true,
+      "effects": true
+    }
+  },
+
+  "icons": {
+    "enabled": true,
+    "outputDir": "static/icons",
+    "format": "svg",
+    "scale": 1,
+    "sourcePage": "",
+    "namePrefix": "icon/",
+    "componentIds": [],
+    "stripPrefix": true,
+    "monochrome": false
+  }
+}

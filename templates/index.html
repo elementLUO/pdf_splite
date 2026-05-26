@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF 分割工具</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="brand">
+          <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="9" y1="13" x2="15" y2="13"/>
+            <line x1="9" y1="17" x2="15" y2="17"/>
+          </svg>
+        </div>
+        <h1 class="title">PDF 分割工具</h1>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Step 1: Upload -->
+      <div class="step-card" id="stepUpload">
+        <div class="step-indicator">
+          <span class="step-num">1</span>
+          <span class="step-label">上传 PDF 文件</span>
+        </div>
+        <div class="card-body">
+          <div class="upload-dropzone" id="uploadZone">
+            <div class="upload-visual">
+              <svg class="upload-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="12" y1="18" x2="12" y2="12"/>
+                <polyline points="9 15 12 12 15 15"/>
+              </svg>
+            </div>
+            <p class="upload-prompt">拖拽文件到此处，或<span class="link" id="btnBrowse">点击选择</span></p>
+            <p class="upload-hint">PDF 格式，最大 600MB</p>
+          </div>
+          <input type="file" id="fileInput" accept=".pdf" hidden>
+          <div id="uploadError" class="inline-error hidden"></div>
+        </div>
+      </div>
+
+      <!-- Step 2: Configure (hidden initially) -->
+      <div class="step-card" id="stepConfig" style="display:none;">
+        <div class="step-indicator">
+          <span class="step-num">2</span>
+          <span class="step-label">配置分割区间</span>
+          <span class="file-badge" id="fileBadge"></span>
+        </div>
+        <div class="card-body">
+          <!-- Mode tabs -->
+          <div class="tab-bar">
+            <button class="tab active" data-mode="custom">自定义区间</button>
+            <button class="tab" data-mode="equal">等分模式</button>
+          </div>
+
+          <!-- Custom mode -->
+          <div id="panelCustom" class="tab-panel">
+            <div class="table-wrap">
+              <table class="range-table">
+                <thead>
+                  <tr>
+                    <th class="col-seq">#</th>
+                    <th class="col-start">起始页</th>
+                    <th class="col-end">结束页</th>
+                    <th class="col-name">输出文件名</th>
+                    <th class="col-actions">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="rangeTableBody"></tbody>
+              </table>
+            </div>
+            <button class="btn btn-outline btn-sm" id="btnAddRange">
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              添加区间
+            </button>
+          </div>
+
+          <!-- Equal mode -->
+          <div id="panelEqual" class="tab-panel hidden">
+            <div class="equal-row">
+              <label class="equal-label">将 PDF 等分为</label>
+              <input type="number" id="equalParts" class="input-inline" min="2" max="100" value="2">
+              <span class="equal-suffix">份</span>
+              <button class="btn btn-primary btn-sm" id="btnGenerateEqual">生成区间</button>
+            </div>
+            <p id="equalNote" class="hint-text hidden"></p>
+          </div>
+
+          <div id="rangeError" class="inline-error hidden"></div>
+        </div>
+      </div>
+
+      <!-- Action Bar (hidden initially) -->
+      <div class="action-bar" id="actionBar" style="display:none;">
+        <button class="btn btn-primary btn-lg" id="splitBtn">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          执行分割
+        </button>
+        <button class="btn btn-ghost" id="resetBtn">重置</button>
+      </div>
+
+      <!-- Step 3: Results (hidden initially) -->
+      <div class="step-card" id="stepResult" style="display:none;">
+        <div class="step-indicator">
+          <span class="step-num done">&#10003;</span>
+          <span class="step-label">分割完成</span>
+        </div>
+        <div class="card-body">
+          <div id="resultList" class="result-grid"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Preview Modal -->
+  <div id="previewModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-panel">
+      <div class="modal-top">
+        <h3>页面预览</h3>
+        <span class="modal-sub" id="previewLabel"></span>
+        <button class="btn btn-icon" id="btnClosePreview">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-main">
+        <div class="preview-controls">
+          <button class="btn btn-outline btn-sm" id="btnPrevPage">上一页</button>
+          <span id="previewIndicator" class="page-indicator"></span>
+          <button class="btn btn-outline btn-sm" id="btnNextPage">下一页</button>
+          <span class="jump-sep"></span>
+          <label class="jump-label">跳转到</label>
+          <input type="number" id="previewJumpInput" class="input-inline jump-input" min="1" value="1">
+          <span class="jump-suffix">页</span>
+          <button class="btn btn-primary btn-sm" id="btnJumpPage">跳转</button>
+        </div>
+        <div class="preview-canvas">
+          <img id="previewImage" src="" alt="PDF 预览">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="/static/js/main.js"></script>
+</body>
+</html>

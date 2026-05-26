@@ -1,0 +1,11 @@
+.env
+node_modules/
+static/css/tokens.css
+static/icons/
+__pycache__/
+*.pyc
+.agents/
+.claude/
+.mcp.json
+skills-lock.json
+package-lock.json
